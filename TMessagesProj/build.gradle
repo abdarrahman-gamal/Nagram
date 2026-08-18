@@ -228,7 +228,7 @@ android {
 
     flavorDimensions "version"
 
-    Options {
+    packagingOptions {
         jniLibs {
             excludes += ['/fabric/**', '/META-INF/native-image/**']
             useLegacyPackaging false
@@ -273,7 +273,7 @@ android {
 
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
-         packaging   String gramName = "Nagram"
+            String gramName = "Nagram"
             String first = String.format("%s-v%s(%s)", gramName, versionName, versionCode)
             String name = outputFileName.replace("TMessagesProj", first)
             name = name.replace("-release", "")
