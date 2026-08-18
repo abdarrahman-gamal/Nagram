@@ -203,50 +203,6 @@ public class SearchAdapterHelper {
                                 TLRPC.User user = res.users.get(a);
                                 usersMap.put(user.id, user);
                             }
-                            // -----------------------------------------------------------------------------
-                            // Original block retained for reference.  Public/global chats/channels were
-                            // previously inserted into the global-search result list here.
-                            // -----------------------------------------------------------------------------
-                            // for (int b = 0; b < 2; b++) {
-                            //     ArrayList<TLRPC.Peer> arrayList;
-                            //     if (b == 0) {
-                            //         if (!allResultsAreGlobal) {
-                            //             continue;
-                            //         }
-                            //         arrayList = res.my_results;
-                            //     } else {
-                            //         arrayList = res.results;
-                            //     }
-                            //     for (int a = 0; a < arrayList.size(); a++) {
-                            //         TLRPC.Peer peer = arrayList.get(a);
-                            //         TLRPC.User user = null;
-                            //         TLRPC.Chat chat = null;
-                            //         if (peer.user_id != 0) {
-                            //             user = usersMap.get(peer.user_id);
-                            //         } else if (peer.chat_id != 0) {
-                            //             chat = chatsMap.get(peer.chat_id);
-                            //         } else if (peer.channel_id != 0) {
-                            //             chat = chatsMap.get(peer.channel_id);
-                            //         }
-                            //         if (chat != null) {
-                            //             if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat) || !filter(chat)) {
-                            //                 continue;
-                            //             }
-                            //             globalSearch.add(chat);
-                            //             globalSearchMap.put(-chat.id, chat);
-                            //         } else if (user != null) {
-                            //             if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || !allowGlobalResults && b == 1 && !user.contact || !filter(user)) {
-                            //                 continue;
-                            //             }
-                            //             globalSearch.add(user);
-                            //             globalSearchMap.put(user.id, user);
-                            //         }
-                            //     }
-                            // }
-
-                            // TODO: Modified to restrict global search results to users only.
-                            // Public chats/channels/groups are intentionally excluded from the
-                            // global-search result set to keep the search scope to people.
                             for (int b = 0; b < 2; b++) {
                                 ArrayList<TLRPC.Peer> arrayList;
                                 if (b == 0) {
@@ -269,12 +225,13 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        // Intentionally do not add public channel/group results to the
-                                        // global search list; keep only user results.
-                                        continue;
-                                    }
-                                    if (user != null) {
-                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || !filter(user)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat) || !filter(chat)) {
+                                            continue;
+                                        }
+                                        globalSearch.add(chat);
+                                        globalSearchMap.put(-chat.id, chat);
+                                    } else if (user != null) {
+                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || !allowGlobalResults && b == 1 && !user.contact || !filter(user)) {
                                             continue;
                                         }
                                         globalSearch.add(user);
@@ -624,28 +581,11 @@ public class SearchAdapterHelper {
         }
     }
 
-    // -----------------------------------------------------------------------------
-    // Original block retained for reference.  The original implementation simply
-    // returned the complete globalSearch list, which could include public chats.
-    // -----------------------------------------------------------------------------
-    // public ArrayList<TLObject> getGlobalSearch() {
-    //     if (NaConfig.INSTANCE.getDisableGlobalSearch().Bool()) {
-    //         return new ArrayList<TLObject>();
-    //     }
-    //     return globalSearch;
-    // }
-
-    // TODO: Modified to enforce the restricted-search behavior at the result-return layer.
-    // Only user objects are allowed to leave the global-search result set.
     public ArrayList<TLObject> getGlobalSearch() {
-        ArrayList<TLObject> restricted = new ArrayList<>();
-        for (int i = 0; i < globalSearch.size(); i++) {
-            TLObject obj = globalSearch.get(i);
-            if (obj instanceof TLRPC.User) {
-                restricted.add(obj);
-            }
+        if (NaConfig.INSTANCE.getDisableGlobalSearch().Bool()) {
+            return new ArrayList<TLObject>();
         }
-        return restricted;
+        return globalSearch;
     }
 
     public ArrayList<Object> getPhoneSearch() {
